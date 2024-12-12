@@ -1,0 +1,37 @@
+To find the distribution of radios in each channel and to categorize respectively into 
+Low
+Medium-Low 
+Medium 
+Medium-High 
+High 
+
+1) Find out number of radios in every channel ( example: assuming 6 channels )
+[12, 7, 20, 15, 8, 5]
+
+2) Determine the range of values: 
+Find min and max number of radios - 
+	min = 5 
+	max = 20 
+	
+3) Calculate the range and divide into intervals 
+	a.  Range = max - min 
+	ex: 20 - 5 = 15 
+	
+	b. divide the range into 5 equal intervals ( categories ranging from low to high)
+		Interval size = Range / number_of_categories
+		ex: Interval size = 15/5 = 3 
+		
+4) Define category boundaries
+	* Low : [min, min+ Interval_size]
+	* Medium-Low: [min + Interval size, min + 2 × Interval size)
+	* Medium: [min + 2 × Interval size, min + 3 × Interval size)
+	* Medium-High: [min + 3 × Interval size, min + 4 × Interval size)
+	* High: [min + 4 × Interval size, max]
+	
+	ex: 
+	Low: [5, 8)
+	Medium-Low: [8, 11)
+	Medium: [11, 14)
+	Medium-High: [14, 17)
+	High: [17, 20]
+	
