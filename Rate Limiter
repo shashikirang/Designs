@@ -1,0 +1,78 @@
+=========================
+Rate Limiter:
+=========================
+
+
+Why is it required :
+>> For better UX experience 
+>> To reduce security issues (DDOS )
+>> Low cost 
+
+Designing a rate limiter depends on factors like performance, scalability, and accuracy requirements. Here are common approaches:
+
+ 1. Token Bucket (Most Common & Efficient)
+- How it works: 
+  - A "bucket" holds a fixed number of tokens.
+  - Tokens are added at a fixed rate.
+  - Each request consumes a token.
+  - If no tokens are left, the request is denied or delayed.
+- Pros: 
+  - Allows burst requests up to bucket size.
+  - Smooth request flow.
+- Cons: 
+  - Slightly complex to implement.
+- Use case: API rate limiting, traffic shaping.
+
+ 2. Leaky Bucket
+- How it works: 
+  - Requests enter a queue (bucket).
+  - Requests are processed at a fixed rate.
+  - Excess requests are discarded.
+- Pros: 
+  - Ensures a steady request rate.
+- Cons: 
+  - Not as flexible as Token Bucket.
+- Use case: Network traffic shaping.
+
+ 3. Fixed Window Counter
+- How it works: 
+  - Divide time into fixed windows (e.g., per second/minute).
+  - Maintain a counter per window.
+  - If the counter exceeds the limit, requests are rejected.
+- Pros: 
+  - Simple to implement.
+- Cons: 
+  - Can cause bursts at window edges.
+- Use case: Basic rate limiting (e.g., 1000 req/min).
+
+ 4. Sliding Window Log
+- How it works: 
+  - Maintain a timestamp log of requests.
+  - Discard timestamps outside the current window.
+  - Count requests in the valid window.
+- Pros: 
+  - More accurate than Fixed Window.
+- Cons: 
+  - High memory usage (stores timestamps).
+- Use case: API request tracking.
+
+ 5. Sliding Window Counter (Optimized)
+- How it works: 
+  - Like Fixed Window but smoothes rate by keeping two adjacent windows.
+  - Partially counts the previous window.
+- Pros: 
+  - Reduces bursts.
+  - Efficient compared to Sliding Window Log.
+- Use case: API throttling.
+
+ 6. Distributed Rate Limiting (For Multi-Node Systems)
+- Approaches: 
+  - Redis-based (Atomic counters with TTL).
+  - Distributed Token Bucket (e.g., using Redis scripts).
+  - Consistent Hashing (to distribute load).
+- Use case: Scalable API gateways.
+
+Best Approach for Your Case?
+- Single instance: Token Bucket (efficient) or Sliding Window Counter.
+- Distributed system: Redis-based rate limiting.
+- Precise limits: Sliding Window Log.
