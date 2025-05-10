@@ -1,0 +1,95 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <stdint.h>
+
+#define MEMORY_SIZE 1024 * 1024 // 1 MB
+
+typedef struct Block {
+    size_t size;
+    int free;
+    struct Block* next;
+} Block;
+
+#define BLOCK_SIZE sizeof(Block)
+
+static uint8_t memory[MEMORY_SIZE];
+static Block* free_list = (Block*)memory;
+
+// Initialize memory block
+void initialize_memory() {
+    free_list->size = MEMORY_SIZE - BLOCK_SIZE;
+    free_list->free = 1;
+    free_list->next = NULL;
+}
+
+void split(Block* fitting_slot, size_t size) {
+    Block* new_block = (void*)((void*)fitting_slot + size + BLOCK_SIZE);
+    new_block->size = fitting_slot->size - size - BLOCK_SIZE;
+    new_block->free = 1;
+    new_block->next = fitting_slot->next;
+    
+    fitting_slot->size = size;
+    fitting_slot->free = 0;
+    fitting_slot->next = new_block;
+}
+
+void* custom_malloc(size_t no_of_bytes) {
+    Block* curr;
+    void* result;
+
+    if (!(free_list->size)) {
+        initialize_memory();
+    }
+
+    curr = free_list;
+    while ((((curr->size) < no_of_bytes) || ((curr->free) == 0)) && (curr->next != NULL)) {
+        curr = curr->next;
+    }
+
+    if ((curr->size) == no_of_bytes) {
+        curr->free = 0;
+        result = (void*)(++curr);
+        return result;
+    } else if ((curr->size) > (no_of_bytes + BLOCK_SIZE)) {
+        split(curr, no_of_bytes);
+        result = (void*)(++curr);
+        return result;
+    } else {
+        return NULL;
+    }
+}
+
+void merge() {
+    Block* curr = free_list;
+    while (curr && curr->next) {
+        if (curr->free && curr->next->free) {
+            curr->size += BLOCK_SIZE + curr->next->size;
+            curr->next = curr->next->next;
+        }
+        curr = curr->next;
+    }
+}
+
+void custom_free(void* ptr) {
+    if (((void*)memory <= ptr) && (ptr <= (void*)(memory + MEMORY_SIZE))) {
+        Block* curr = (Block*)ptr - 1;
+        curr->free = 1;
+        merge();
+    }
+}
+
+// Simple test
+int main() {
+    void* p1 = custom_malloc(100);
+    void* p2 = custom_malloc(200);
+    printf("Allocated p1 = %p, p2 = %p\n", p1, p2);
+
+    custom_free(p1);
+    custom_free(p2);
+
+    void* p3 = custom_malloc(150);
+    printf("Allocated p3 = %p\n", p3);
+
+    return 0;
+}
