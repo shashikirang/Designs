@@ -1,0 +1,57 @@
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+type RateLimiter struct {
+	tokens chan struct{}
+	limit  int
+}
+
+func NewRateLimiter(rps int) *RateLimiter {
+	rl := &RateLimiter{
+		tokens: make(chan struct{}, rps),
+		limit:  rps,
+	}
+
+	// Fill tokens every 1/rps seconds
+	go func() {
+		ticker := time.NewTicker(time.Second / time.Duration(rps))
+		defer ticker.Stop()
+		for range ticker.C {
+			select {
+			case rl.tokens <- struct{}{}:
+				// added token
+			default:
+				// bucket full, discard token
+			}
+		}
+	}()
+
+	return rl
+}
+
+func (rl *RateLimiter) Allow() bool {
+	select {
+	case <-rl.tokens:
+		return true
+	default:
+		return false
+	}
+}
+
+func main() {
+	rps := 20 // 5 requests per second
+	rl := NewRateLimiter(rps)
+
+	for i := 0; i < 200; i++ {
+		if rl.Allow() {
+			fmt.Printf("[%v] Request %d: Allowed\n", time.Now().Format("15:04:05.000"), i)
+		} else {
+			fmt.Printf("[%v] Request %d: Rate Limited\n", time.Now().Format("15:04:05.000"), i)
+		}
+		time.Sleep(10 * time.Millisecond) // simulate incoming requests
+	}
+}
